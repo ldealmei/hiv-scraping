@@ -5,7 +5,7 @@ from scrapy.spiders import Rule, CrawlSpider
 import re
 
 class HivOrgsSpider(CrawlSpider):
-    name = 'hiv_orgs'
+    name = 'hiv_orgs_crawl'
     allowed_domains = ['www.nacosa.org.za']
     start_urls = ['http://www.nacosa.org.za/']
     no_follow_links = []

@@ -4,7 +4,7 @@ from scrapy.linkextractors import LinkExtractor
 import re
 
 class HivOrg2Spider(scrapy.Spider):
-    name = 'hiv_org2'
+    name = 'hiv_orgs'
     allowed_domains = ['www.nacosa.org.za']
     start_urls = ['http://www.nacosa.org.za/']
     saved_links = []
