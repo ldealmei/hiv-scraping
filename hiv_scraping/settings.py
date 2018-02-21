@@ -21,6 +21,12 @@ NEWSPIDER_MODULE = 'hiv_scraping.spiders'
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
 
+# Configure item pipelines
+# See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
+# ITEM_PIPELINES = {
+#    'hiv_scraping.pipelines.HivScrapingPipeline': 300,
+#    'hiv_scraping.pipelines.CheckHIVPipeline' : 500}
+
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
 
@@ -62,11 +68,6 @@ ROBOTSTXT_OBEY = True
 #    'scrapy.extensions.telnet.TelnetConsole': None,
 #}
 
-# Configure item pipelines
-# See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'hiv_scraping.pipelines.HivScrapingPipeline': 300,
-#}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
