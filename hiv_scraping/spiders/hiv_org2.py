@@ -5,8 +5,8 @@ import re
 
 class HivOrg2Spider(scrapy.Spider):
     name = 'hiv_orgs'
-    allowed_domains = ['www.nacosa.org.za']
-    start_urls = ['http://www.nacosa.org.za/']
+    allowed_domains = ['www.nacosa.org.za', 'www.aids.org.za','hivsa.com','www.caprisa.org']
+    start_urls = ['http://www.nacosa.org.za/','https://www.aids.org.za' ,'http://hivsa.com/','http://www.caprisa.org/Default']
     saved_links = []
     dead_ends = {}
     restricted_sections = []
@@ -28,9 +28,6 @@ class HivOrg2Spider(scrapy.Spider):
             except :
                 self.dead_ends[response.request.url] =1
 
-            print
-            print self.restricted_sections
-            print
             self.update_restrictions()
         else :
             for link in next_links :
