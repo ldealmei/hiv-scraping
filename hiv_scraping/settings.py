@@ -65,7 +65,7 @@ ROBOTSTXT_OBEY = True
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
 EXTENSIONS = {
-   'class scrapy.extensions.closespider.CloseSpider': None,
+   'scrapy.extensions.closespider.CloseSpider': 500,
 }
 
 
