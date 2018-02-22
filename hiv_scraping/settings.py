@@ -16,7 +16,7 @@ NEWSPIDER_MODULE = 'hiv_scraping.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'hiv_scraping (+http://www.yourdomain.com)'
+USER_AGENT = 'HIVBot (luis@digityser.org)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -64,9 +64,9 @@ ROBOTSTXT_OBEY = True
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
-#EXTENSIONS = {
-#    'scrapy.extensions.telnet.TelnetConsole': None,
-#}
+EXTENSIONS = {
+   'class scrapy.extensions.closespider.CloseSpider': None,
+}
 
 
 # Enable and configure the AutoThrottle extension (disabled by default)

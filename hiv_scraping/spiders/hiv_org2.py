@@ -3,6 +3,7 @@ import scrapy
 from scrapy.linkextractors import LinkExtractor
 import re
 import pandas as pd
+import numpy as np
 
 
 def stripurl(url):
@@ -17,10 +18,10 @@ class OrgWebsite(scrapy.Item):
 
 
 
-class HivOrg2Spider(scrapy.Spider):
-    name = 'hiv_orgs'
+class HIVBootstraper(scrapy.Spider):
+    name = 'hiv_bootstraper'
     custom_settings = {
-        'ITEM_PIPELINES': {'hiv_scraping.pipelines.HivScrapingPipeline': 300}
+        'ITEM_PIPELINES': {'hiv_scraping.pipelines.HivBootstrapScrapingPipeline': 300}
         }
 
     allowed_domains = ['www.nacosa.org.za', 'www.aids.org.za','hivsa.com','www.caprisa.org']
@@ -46,14 +47,14 @@ class HivOrg2Spider(scrapy.Spider):
             except :
                 self.dead_ends[response.request.url] =1
 
-            self.update_restrictions()
+            self._update_restrictions()
         else :
             for link in next_links :
                 yield scrapy.Request(link.url, callback = self.parse)
 
 
 
-    def update_restrictions(self):
+    def _update_restrictions(self):
         self.restricted_sections = [k for k in self.dead_ends.keys() if self.dead_ends[k] > 3]
 
 
@@ -66,7 +67,7 @@ class HIVChecker(scrapy.Spider) :
         }
 
     def start_requests(self):
-        return [scrapy.Request(dom, callback=self.hiv_check) for dom in self.load_domains_to_check()]
+        return [scrapy.Request(dom, callback=self.hiv_check) for dom in self._load_domains_to_check()]
 
     def hiv_check(self, response): #parse method
         word_dump = ''.join([txt.lower() for txt in response.xpath('//text()').extract()])
@@ -75,6 +76,63 @@ class HIVChecker(scrapy.Spider) :
                'text_dump' : word_dump}
 
 
-    def load_domains_to_check(self):
+    def _load_domains_to_check(self):
         doms = pd.read_csv('domains.csv')
-        return doms[doms['to_crawl'].isnull()]['domain'].tolist()
+        doms = doms[doms['to_crawl'].isnull()]['domain'].tolist()
+
+        return['https://' + dom for dom in doms]
+
+class HIVSatellite(scrapy.Spider):
+    #TODO : update the dead-end mechanism to also check whether the new pages are relevant
+    name = 'hiv_satellite'
+    custom_settings = {
+        'ITEM_PIPELINES': {'hiv_scraping.pipelines.HivSatScrapingPipeline': 300},
+        'CLOSESPIDER_PAGECOUNT' : 200
+                        }
+
+    saved_domains = []
+    dead_ends = {}
+    restricted_sections = []
+    #
+    # def start_requests(self):
+    #     return [scrapy.Request(dom, callback=self.parse) for dom in self.load_domains_to_scrape()]
+
+    # this setup (calling __init__) is to allow to take an argument when opening the spider
+    def __init__(self, **kw):
+        super(HIVSatellite, self).__init__(**kw)
+        self.start_urls = kw.get('domain')
+        self.allowed_domains = [stripurl(kw.get('domain')[0])]
+
+
+    def parse(self, response):
+        links = LinkExtractor(allow=(), deny=self.allowed_domains + self.saved_domains).extract_links(response)
+
+        for link in links:
+            self.saved_domains.append(stripurl(link.url))
+            orgwebsite = OrgWebsite(link=link.url, domain=stripurl(link.url),
+                                    referer=stripurl(response.request.url))
+
+            yield orgwebsite
+
+        next_links = LinkExtractor(allow=self.allowed_domains, deny=self.restricted_sections).extract_links(
+            response)
+        if len(links) == 0:
+            try:
+                self.dead_ends[response.request.url] += 1
+            except:
+                self.dead_ends[response.request.url] = 1
+
+            self._update_restrictions()
+        else:
+            for link in next_links:
+                yield scrapy.Request(link.url, callback=self.parse)
+
+    def _update_restrictions(self):
+        self.restricted_sections = [k for k in self.dead_ends.keys() if self.dead_ends[k] > 3]
+    #
+    # def load_domains_to_scrape(self):
+    #     doms = pd.read_csv('domains.csv')
+    #     doms = doms[np.logical_and(doms['to_crawl']==1, doms['crawled']==0 )]['domain'].tolist()
+    #
+    #     return ['https://' + dom for dom in doms]
+    #
