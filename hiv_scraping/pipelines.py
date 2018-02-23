@@ -88,6 +88,7 @@ class CheckHIVPipeline(object):
         self.exporter.finish_exporting()
         self.file.close()
         self.make_domain_selection()
+        self.clean_orgs()
 
     def make_domain_selection(self):
         dom_check = pd.read_csv('homepage_check.csv')
@@ -101,6 +102,25 @@ class CheckHIVPipeline(object):
         dom_join = dom_join.sort_values(by=['references', 'to_crawl'], ascending=False) \
                             .drop(['hiv', 'ngo', 'health', 'aids', 'gov', 'data'], axis=1)
         dom_join.to_csv('domains.csv',index=False)
+
+    def clean_orgs(self):
+        raw_orgs = pd.read_csv('orgs.csv')
+        domains = pd.read_csv('domains.csv')
+
+        raw_orgs['to_keep'] = raw_orgs['domain'].apply(self._keep_or_not, args = (domains,))
+
+        orgs_clean = raw_orgs[raw_orgs['to_keep']==1]
+
+        orgs_clean.drop('to_keep',axis=1)\
+                    .to_csv('orgs.csv', index = False)
+
+        print "-----------------------------"
+        print "-----------------------------"
+        print "-----------------------------"
+        print "-----------------------------"
+
+    def _keep_or_not(self,s, domains):
+        return s in domains['domain'].tolist() and bool(domains.loc[domains['domain']==s, 'to_crawl'].values[0])
 
     def _check_hiv_relevance(self,row):
         # TODO : improve these conditions to make it more relevant

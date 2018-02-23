@@ -31,8 +31,8 @@ class HIVBootstraper(scrapy.Spider):
         'CLOSESPIDER_ITEMCOUNT': 100
     }
 
-    allowed_domains = ['www.nacosa.org.za', 'www.aids.org.za','hivsa.com','www.caprisa.org']
-    start_urls = ['http://www.nacosa.org.za/','https://www.aids.org.za' ,'http://hivsa.com/','http://www.caprisa.org/Default']
+    allowed_domains = ['www.nacosa.org.za']#, 'www.aids.org.za','hivsa.com','www.caprisa.org']
+    start_urls = ['http://www.nacosa.org.za/']#,'https://www.aids.org.za' ,'http://hivsa.com/','http://www.caprisa.org/Default']
     saved_domains = []
     dead_ends = {}
     restricted_sections = []

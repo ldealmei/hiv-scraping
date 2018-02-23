@@ -18,7 +18,6 @@ from scrapy.utils.log import configure_logging
 #     return doms
 
 if __name__ == "__main__" :
-    #TODO  :keep the http (url scheme) when saving the domain
 # --------------- PHASE 1 : Crawl initial list --------------------
 # Attention, qd on crawle via un CrawlerProcess les parametres dans settings.py ne sont pas automatiquement loades
 # utiliser : = > get_project_settings()
@@ -38,13 +37,11 @@ if __name__ == "__main__" :
     crawl()
     reactor.run()
 
-
 """ FIRST"""
-
-    # TODO : the hiv checker should also indicate whether the domain is valid or not and delete it from orgs
-    # This means catching errors and parsing them
-
+# TODO : Why is pepfar.org, a site that should be accepted to be scraped not in the domains.csv ?
+# TODO : count of references seem to not be by unique referent website...
 # TODO : test a second loop starting at transform_list()
+# TODO : set start_urls of the Bootstrap spider as a parameter in the main
 """AFTER"""
 # TODO : Test and integrate neo4j uploading (do it after the HIVChecker spider and change the orgs.csv filename with an uploading time timestamp
 # TODO : desactivate TELNET console
