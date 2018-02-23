@@ -100,7 +100,7 @@ class CheckHIVPipeline(object):
 
         dom_join = dom_join.sort_values(by=['references', 'to_crawl'], ascending=False) \
                             .drop(['hiv', 'ngo', 'health', 'aids', 'gov', 'data'], axis=1)
-        dom_join.to_csv('domains.csv')
+        dom_join.to_csv('domains.csv',index=False)
 
     def _check_hiv_relevance(self,row):
         # TODO : improve these conditions to make it more relevant

@@ -10,12 +10,12 @@ from hiv_org2 import HIVBootstraper, HIVChecker, HIVSatellite
 from scrapy.utils.project import get_project_settings
 from twisted.internet import reactor, defer
 from scrapy.utils.log import configure_logging
-
-def prepare_launch():
-    doms = pd.read_csv('domains.csv')
-    doms = doms[np.logical_and(doms['to_crawl'] == 1, doms['crawled'] == 0)]['domain'].tolist()
-
-    return doms
+#
+# def prepare_launch():
+#     doms = pd.read_csv('domains.csv')
+#     doms = doms[np.logical_and(doms['to_crawl'] == 1, doms['crawled'] == 0)]['domain'].tolist()
+#
+#     return doms
 
 if __name__ == "__main__" :
     #TODO  :keep the http (url scheme) when saving the domain
@@ -30,30 +30,23 @@ if __name__ == "__main__" :
     def crawl():
         yield runner.crawl(HIVBootstraper)
         yield runner.crawl(HIVChecker)
+        #TODO : Make this value adaptable (or not, maybe we could limit the exploration to the top x sites)
+        for i in range(5):
+            yield runner.crawl(HIVSatellite)
         reactor.stop()
-
 
     crawl()
     reactor.run()
 
-    # make_domain_selection()
-    #
-    # count =0 # for testing purposes
-    # for dom in prepare_launch():
-    #     runner.crawl('hiv_satellite', domain = [dom])
-    #
-    #     count +=1
-    #     if count >= 5 :
-    #         break
-    #
-    # sat.addBoth(lambda _: reactor.stop())
-    # reactor.run()  # the script will block here until the crawling is finished
-    #
 
-#  TODO : when multiple spiders they must write to different files otherwise conflict
+""" FIRST"""
+
+    # TODO : the hiv checker should also indicate whether the domain is valid or not and delete it from orgs
+    # This means catching errors and parsing them
+
 # TODO : test a second loop starting at transform_list()
-# TODO : the hiv checker should also indicate whether the domain is valid or not and delete it from orgs
-# TODO : Test and integrate neo4j uploading
+"""AFTER"""
+# TODO : Test and integrate neo4j uploading (do it after the HIVChecker spider and change the orgs.csv filename with an uploading time timestamp
 # TODO : desactivate TELNET console
 # TODO : set-up broad crawling options
 # TODO : improve detection of relevance

@@ -1,3 +1,4 @@
+import pandas as pd
 from py2neo import Graph,Node, Relationship, watch
 
 class Neo4jUploader() :

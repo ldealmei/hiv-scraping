@@ -92,20 +92,25 @@ class HIVChecker(scrapy.Spider) :
 class HIVSatellite(scrapy.Spider):
     #TODO : update the dead-end mechanism to also check whether the new pages are relevant
     name = 'hiv_satellite'
-    custom_settings = {
-        'ITEM_PIPELINES': {'hiv_scraping.pipelines.HivSatScrapingPipeline': 300},
-        'CLOSESPIDER_PAGECOUNT' : 200
-                        }
+
+    custom_settings = { 'ITEM_PIPELINES': {'hiv_scraping.pipelines.HivSatScrapingPipeline': 300},
+                        'CLOSESPIDER_PAGECOUNT' : 200}
 
     saved_domains = []
     dead_ends = {}
     restricted_sections = []
 
-    # this setup (calling __init__) is to allow to take an argument when opening the spider
     def __init__(self, **kw):
         super(HIVSatellite, self).__init__(**kw)
-        self.start_urls = kw.get('domain')
-        self.allowed_domains = [get_domain(kw.get('domain')[0])]
+        self.start_urls = self._get_start_url()
+        self.allowed_domains = [get_domain(self.start_urls[0])]
+
+        print
+        print "----------------------- NEW SPIDER -----------------------"
+        print "start_urls : %s" % self.start_urls[0]
+        print "allowed domains : %s" % self.allowed_domains[0]
+        print "----------------------- --- ------ -----------------------"
+        print
 
 
     def parse(self, response):
@@ -133,3 +138,18 @@ class HIVSatellite(scrapy.Spider):
 
     def _update_restrictions(self):
         self.restricted_sections = [k for k in self.dead_ends.keys() if self.dead_ends[k] > 3]
+
+    def _get_start_url(self):
+
+        doms = pd.read_csv('domains.csv')
+        eligible_doms = doms[np.logical_and(doms['to_crawl'] == 1, doms['crawled'] == 0)]['domain'].tolist()
+
+        # take first result
+        chosen_dom = eligible_doms[0]
+        # update file
+        doms.loc[doms['domain'] == chosen_dom, 'crawled'] = 1
+        doms.to_csv('domains.csv', index=False)
+
+        return [chosen_dom]
+
+
