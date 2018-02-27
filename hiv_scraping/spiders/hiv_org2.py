@@ -31,11 +31,21 @@ class HIVBootstraper(scrapy.Spider):
         'CLOSESPIDER_ITEMCOUNT': 100
     }
 
-    allowed_domains = ['www.nacosa.org.za']#, 'www.aids.org.za','hivsa.com','www.caprisa.org']
-    start_urls = ['http://www.nacosa.org.za/']#,'https://www.aids.org.za' ,'http://hivsa.com/','http://www.caprisa.org/Default']
     saved_domains = []
     dead_ends = {}
     restricted_sections = []
+
+    def __init__(self, **kw):
+        super(HIVBootstraper, self).__init__(**kw)
+        # self.start_urls = self.__getattribute__()
+        # self.allowed_domains = [get_domain(self.start_urls[0])]
+
+        print
+        print "----------------------- UNLEASHING BOOTSTRAP SPIDER -----------------------"
+        print "start_urls : %s" % self.start_urls[0]
+        print "allowed domains : %s" % self.allowed_domains[0]
+        print "----------------------- --- ------ -----------------------"
+        print
 
     def parse(self, response):
         links = LinkExtractor(allow=(), deny= self.allowed_domains + self.saved_domains).extract_links(response)
