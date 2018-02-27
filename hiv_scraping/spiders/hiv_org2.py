@@ -41,10 +41,11 @@ class HIVBootstraper(scrapy.Spider):
         links = LinkExtractor(allow=(), deny= self.allowed_domains + self.saved_domains).extract_links(response)
 
         for link in links:
-            self.saved_domains.append(get_domain(link.url))
-            orgwebsite = OrgWebsite(link = link.url, domain = trim_url(link.url), referer = trim_url(response.request.url) )
+            if get_domain(link.url) not in self.saved_domains :
+                self.saved_domains.append(get_domain(link.url))
+                orgwebsite = OrgWebsite(link = link.url, domain = trim_url(link.url), referer = trim_url(response.request.url) )
 
-            yield orgwebsite
+                yield orgwebsite
 
 
         next_links = LinkExtractor(allow= self.allowed_domains, deny = self.restricted_sections).extract_links(response)

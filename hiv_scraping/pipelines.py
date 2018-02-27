@@ -10,13 +10,13 @@ import re
 import pandas as pd
 
 class HivBootstrapScrapingPipeline(object):
+
     def open_spider(self, spider):
         self.file = open("orgs.csv", 'ab')
         self.exporter = CsvItemExporter(self.file, unicode)
         self.exporter.start_exporting()
 
     def process_item(self, item, spider):
-
         self.exporter.export_item(item)
         return item
 

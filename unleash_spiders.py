@@ -39,7 +39,6 @@ if __name__ == "__main__" :
 
 """ FIRST"""
 # TODO : Why is pepfar.org, a site that should be accepted to be scraped not in the domains.csv ?
-# TODO : count of references seem to not be by unique referent website...
 # TODO : test a second loop starting at transform_list()
 # TODO : set start_urls of the Bootstrap spider as a parameter in the main
 """AFTER"""
