@@ -44,7 +44,6 @@ if __name__ == "__main__" :
     reactor.run()
 
 """ FIRST"""
-# TODO : HIV Satellites export to orgs.csv logic is not correct (multiple links to same site)
 # TODO : Why is pepfar.org, a site that should be accepted to be scraped not in the domains.csv ?
 # TODO : test a second loop starting at transform_list()
 

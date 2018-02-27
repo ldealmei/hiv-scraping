@@ -5,7 +5,6 @@ import re
 import pandas as pd
 import numpy as np
 
-
 def get_domain(url):
     matched = re.match('^(?:http[s]?://)+[^/]*', url).group(0)
 
@@ -48,27 +47,27 @@ class HIVBootstraper(scrapy.Spider):
         print
 
     def parse(self, response):
-        links = LinkExtractor(allow=(), deny= self.allowed_domains + self.saved_domains).extract_links(response)
+        links = LinkExtractor(allow=(), deny=self.allowed_domains + self.saved_domains).extract_links(response)
 
         for link in links:
-            if get_domain(link.url) not in self.saved_domains :
+            if get_domain(link.url) not in self.saved_domains:
                 self.saved_domains.append(get_domain(link.url))
-                orgwebsite = OrgWebsite(link = link.url, domain = trim_url(link.url), referer = trim_url(response.request.url) )
+                orgwebsite = OrgWebsite(link=link.url, domain=trim_url(link.url),
+                                        referer=trim_url(response.request.url))
 
                 yield orgwebsite
 
-
-        next_links = LinkExtractor(allow= self.allowed_domains, deny = self.restricted_sections).extract_links(response)
-        if len(links) == 0 :
-            try :
-                self.dead_ends[response.request.url] +=1
-            except :
-                self.dead_ends[response.request.url] =1
+        next_links = LinkExtractor(allow=self.allowed_domains, deny=self.restricted_sections).extract_links(response)
+        if len(links) == 0:
+            try:
+                self.dead_ends[response.request.url] += 1
+            except:
+                self.dead_ends[response.request.url] = 1
 
             self._update_restrictions()
-        else :
-            for link in next_links :
-                yield scrapy.Request(link.url, callback = self.parse)
+        else:
+            for link in next_links:
+                yield scrapy.Request(link.url, callback=self.parse)
 
 
 
@@ -125,17 +124,18 @@ class HIVSatellite(scrapy.Spider):
 
 
     def parse(self, response):
+        # TODO : Find a way to have the exact same logic as the HIVBootstrap spider (maybe just have the exact same type?)
         links = LinkExtractor(allow=(), deny=self.allowed_domains + self.saved_domains).extract_links(response)
 
         for link in links:
-            self.saved_domains.append(get_domain(link.url))
-            orgwebsite = OrgWebsite(link=link.url, domain=trim_url(link.url),
-                                    referer=trim_url(response.request.url))
+            if get_domain(link.url) not in self.saved_domains:
+                self.saved_domains.append(get_domain(link.url))
+                orgwebsite = OrgWebsite(link=link.url, domain=trim_url(link.url),
+                                        referer=trim_url(response.request.url))
 
-            yield orgwebsite
+                yield orgwebsite
 
-        next_links = LinkExtractor(allow=self.allowed_domains, deny=self.restricted_sections).extract_links(
-            response)
+        next_links = LinkExtractor(allow=self.allowed_domains, deny=self.restricted_sections).extract_links(response)
         if len(links) == 0:
             try:
                 self.dead_ends[response.request.url] += 1
