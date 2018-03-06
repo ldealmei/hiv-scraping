@@ -160,6 +160,7 @@ class HivSatScrapingPipeline(object):
         try :
             orgs_df = pd.read_csv('tmp.csv')
         except pd.errors.EmptyDataError :
+	    print "Returning with no new links"
             return
 
         domains_df = pd.read_csv('domains.csv')
