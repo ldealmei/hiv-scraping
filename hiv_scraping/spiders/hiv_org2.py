@@ -162,16 +162,16 @@ class HIVSatellite(scrapy.Spider):
 
         doms = pd.read_csv('domains.csv')
         eligible_doms = doms[np.logical_and(doms['to_crawl'] == 1, doms['crawled'] == 0)]['domain'].tolist()
-	
-	if len(eligible_doms) > 0 :		
-        	# take first result
-        	chosen_dom = eligible_doms[0]
-        	# update file
-        	doms.loc[doms['domain'] == chosen_dom, 'crawled'] = 1
-        	doms.to_csv('domains.csv', index=False)
 
-        	return [chosen_dom], [get_domain(chosen_dom)]
-	else :
-		return [],[]
+        if len(eligible_doms) > 0 :
+        # take first result
+            chosen_dom = eligible_doms[0]
+            # update file
+            doms.loc[doms['domain'] == chosen_dom, 'crawled'] = 1
+            doms.to_csv('domains.csv', index=False)
+
+            return [chosen_dom], [get_domain(chosen_dom)]
+        else :
+            return [],[]
 
 

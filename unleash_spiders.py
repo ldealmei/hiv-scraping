@@ -59,10 +59,10 @@ if __name__ == "__main__" :
 # TODO : Make sure everything behaves as expected
 # TODO : Write debug and monitoring functions
 # TODO :  Catch AttributeErrors when parsing
-# TODO : Do not leave the spiderclase after 30 seconds
+# TODO : Do not leave the spiderclass after 30 seconds
+
 """LONG_TERM / VAGUE"""
 
-# TODO : Use Scrapy logging
 # TODO : Test and integrate neo4j uploading (do it after the HIVChecker spider and change the orgs.csv filename with an uploading time timestamp
 # TODO : desactivate TELNET console
 # TODO : improve detection of relevance
