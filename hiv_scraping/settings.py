@@ -9,7 +9,11 @@
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
-LOG_LEVEL = 'INFO'
+LOG_LEVEL = 'WARNING'
+DOWNLOAD_TIMEOUT = 15
+REDIRECT_ENABLED = False
+RETRY_ENABLED = False
+COOKIES_ENABLED = False
 
 BOT_NAME = 'hiv_scraping'
 

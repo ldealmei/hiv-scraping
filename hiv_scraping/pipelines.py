@@ -8,11 +8,12 @@
 from scrapy.exporters import CsvItemExporter
 import re
 import pandas as pd
+import os
 
 class HivBootstrapScrapingPipeline(object):
 
     def open_spider(self, spider):
-        self.file = open("orgs.csv", 'ab')
+        self.file = open("tmp.csv", 'wb')
         self.exporter = CsvItemExporter(self.file, unicode)
         self.exporter.start_exporting()
 
@@ -29,47 +30,47 @@ class HivBootstrapScrapingPipeline(object):
     def transform_list(self):
         # TODO : make sure loading the whole file doesnt become a bottleneck
         # Load files
-        orgs_df = pd.read_csv('orgs.csv') # might be dangerous if this file gets too big
+        orgs_df = pd.read_csv('tmp.csv') # might be dangerous if this file gets too big
 
-        try :
-            domains_df = pd.read_csv('domains.csv')
-        except :
-            with open('domains.csv', 'w') as f:
-                f.write('domain,to_crawl,crawled,references')
-            domains_df = pd.read_csv('domains.csv')
+        domains_df = pd.DataFrame(columns=['domain','to_crawl','crawled','references'])
 
-        # Split domains dataset into : Domains to add, Domains to update, domains to leave as is
-
-        # Update
-        update_doms = pd.merge(orgs_df[['domain']], domains_df, how='inner', on='domain')
-        update_doms = update_doms.drop_duplicates() #A verifier
-        if len(update_doms) > 0 :
-            update_doms['references'] = update_doms.apply(self._update_domain_count,args=(orgs_df,),axis=1)
-        # Add
+        # Create
+        # TODO : Clean these lines, the merge is probably useless
         new_doms = pd.merge(orgs_df[['domain']], domains_df, how='left', on='domain')
         new_doms = new_doms[new_doms['references'].isnull()].drop_duplicates()
+
+        print "%s domains to be added" % len(new_doms)
 
         if len(new_doms) > 0 :
 
             new_doms[['crawled','references']] = new_doms[['crawled','references']].fillna(0) # we keep 'to_crawl' as NaN to allow the CheckerSpider to decide over that
-            new_doms['references'] = new_doms.apply(self._update_domain_count,args=(orgs_df,),axis=1)
-        # Leave as is
-        unchanged_doms = pd.merge(orgs_df[['domain','referer']], domains_df, how='right', on='domain')
-        unchanged_doms = unchanged_doms[unchanged_doms['referer'].isnull()].drop('referer', axis=1)
+            new_doms['references'] = new_doms.apply(self._get_domain_count,args=(orgs_df,),axis=1)
 
+        # Save to disk
+        new_doms = new_doms.sort_values(by='references',ascending=False)
+        new_doms.to_csv('domains.csv',index=False)
 
-        # Combine everything together and save to disk
-        domains_df = pd.concat([unchanged_doms, update_doms, new_doms]).sort_values(by='references',ascending=False)
-        domains_df.to_csv('domains.csv',index=False)
-
-    def _update_domain_count(self,df_row, orgs_df):
+    def _get_domain_count(self,df_row, orgs_df):
         new_refs = sum(orgs_df['domain'] == df_row['domain'])
         return df_row['references'] + new_refs
 
 class CheckHIVPipeline(object):
     def open_spider(self, spider):
+
+        if os.path.exists('homepage_check.csv'):
+            first_check = False
+        else :
+            first_check = True
+
         self.file = open("homepage_check.csv", 'ab')
-        self.exporter = CsvItemExporter(self.file, unicode)
+
+        if first_check :
+            print "FIRST HIV CHECK"
+            self.exporter = CsvItemExporter(self.file, unicode)
+        else :
+            print "SUBSEQUENT HIV CHECK"
+            self.exporter = CsvItemExporter(self.file, include_headers_line=False)
+
         self.exporter.start_exporting()
 
     def process_item(self, item, spider):
@@ -99,25 +100,31 @@ class CheckHIVPipeline(object):
 
         dom_join['to_crawl'] = dom_join.apply(self._check_hiv_relevance, axis=1)
 
-        dom_join = dom_join.sort_values(by=['references', 'to_crawl'], ascending=False) \
+        dom_join = dom_join.sort_values(by=['to_crawl', 'references'], ascending=False) \
                             .drop(['hiv', 'ngo', 'health', 'aids', 'gov', 'data'], axis=1)
         dom_join.to_csv('domains.csv',index=False)
 
     def clean_orgs(self):
-        raw_orgs = pd.read_csv('orgs.csv')
+        # TODO : We load the whole orgs.csv file, might become big and unmanageable
+        raw_orgs = pd.read_csv('tmp.csv')
         domains = pd.read_csv('domains.csv')
 
         raw_orgs['to_keep'] = raw_orgs['domain'].apply(self._keep_or_not, args = (domains,))
 
-        orgs_clean = raw_orgs[raw_orgs['to_keep']==1]
+        orgs_clean = raw_orgs[raw_orgs['to_keep']==1]\
+                                .drop('to_keep', axis=1)
 
-        orgs_clean.drop('to_keep',axis=1)\
-                    .to_csv('orgs.csv', index = False)
+        # Load past orgs
+        try :
+            orgs_past = pd.read_csv('orgs.csv')
+            orgs_clean = pd.concat([orgs_past, orgs_clean])
+        except :
+            pass
 
-        print "-----------------------------"
-        print "-----------------------------"
-        print "-----------------------------"
-        print "-----------------------------"
+        orgs_clean.to_csv('orgs.csv', index = False)
+
+        print "Keeping {} orgs from pool of {}".format(len(orgs_clean),len(raw_orgs))
+
 
     def _keep_or_not(self,s, domains):
         return s in domains['domain'].tolist() and bool(domains.loc[domains['domain']==s, 'to_crawl'].values[0])
@@ -133,8 +140,8 @@ class CheckHIVPipeline(object):
 
 class HivSatScrapingPipeline(object):
     def open_spider(self, spider):
-        self.file = open("orgs.csv", 'ab')
-        self.exporter = CsvItemExporter(self.file, encoding = unicode, include_headers_line=False)
+        self.file = open("tmp.csv", 'wb')
+        self.exporter = CsvItemExporter(self.file, encoding = unicode)
         self.exporter.start_exporting()
 
     def process_item(self, item, spider):
@@ -145,3 +152,50 @@ class HivSatScrapingPipeline(object):
         # populate with logic to log the result of the scraping of that domain
         self.exporter.finish_exporting()
         self.file.close()
+        self.transform_list()
+
+    def transform_list(self):
+        # TODO : make sure loading the whole file doesnt become a bottleneck
+        # Load files
+        try :
+            orgs_df = pd.read_csv('tmp.csv')
+        except pd.errors.EmptyDataError :
+            return
+
+        domains_df = pd.read_csv('domains.csv')
+
+        # Split domains dataset into : Domains to add, Domains to update, domains to leave as is
+
+        # Update
+        update_doms = pd.merge(orgs_df[['domain']], domains_df, how='inner', on='domain')
+        update_doms = update_doms.drop_duplicates()
+
+        print "%s domains to be updated" % len(update_doms)
+
+        if len(update_doms) > 0:
+            update_doms['references'] = update_doms.apply(self._update_domain_count, args=(orgs_df,), axis=1)
+
+        # Add
+        new_doms = pd.merge(orgs_df[['domain']], domains_df, how='left', on='domain')
+        new_doms = new_doms[new_doms['references'].isnull()].drop_duplicates()
+
+        print "%s domains to be added" % len(new_doms)
+
+        if len(new_doms) > 0:
+            new_doms[['crawled', 'references']] = new_doms[['crawled', 'references']].fillna(
+                0)  # we keep 'to_crawl' as NaN to allow the CheckerSpider to decide over that
+            new_doms['references'] = new_doms.apply(self._update_domain_count, args=(orgs_df,), axis=1)
+        # Leave as is
+
+        unchanged_doms = pd.merge(orgs_df[['domain', 'referer']], domains_df, how='right', on='domain')
+        unchanged_doms = unchanged_doms[unchanged_doms['referer'].isnull()].drop('referer', axis=1)
+
+        print "%s domains left alone" % len(unchanged_doms)
+
+        # Combine everything together and save to disk
+        domains_df = pd.concat([unchanged_doms, update_doms, new_doms]).sort_values(by='references', ascending=False)
+        domains_df.to_csv('domains.csv', index=False)
+
+    def _update_domain_count(self, df_row, orgs_df):
+        new_refs = sum(orgs_df['domain'] == df_row['domain'])
+        return df_row['references'] + new_refs

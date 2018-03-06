@@ -4,6 +4,7 @@ from scrapy.linkextractors import LinkExtractor
 import re
 import pandas as pd
 import numpy as np
+import logging
 
 def get_domain(url):
     matched = re.match('^(?:http[s]?://)+[^/]*', url).group(0)
@@ -38,6 +39,8 @@ class HIVBootstraper(scrapy.Spider):
         super(HIVBootstraper, self).__init__(**kw)
         # self.start_urls = self.__getattribute__()
         # self.allowed_domains = [get_domain(self.start_urls[0])]
+
+        logging.info('Starting Bootstrap Spider with : %s', ', '.join(self.start_urls))
 
         print
         print "----------------------- UNLEASHING BOOTSTRAP SPIDER -----------------------"
@@ -95,7 +98,11 @@ class HIVChecker(scrapy.Spider) :
 
     def _load_domains_to_check(self):
         doms = pd.read_csv('domains.csv')
-        doms = doms[doms['to_crawl'].isnull()]['domain'].tolist()
+        doms = doms[doms['to_crawl'].isnull()].sort_values(by='references')['domain'].tolist()
+
+        print "-----------------------"
+        print "%s NEW DOMAINS TO CHECK FOR HIV" % str(len(doms))
+        print "-----------------------"
 
         return doms
 
@@ -104,7 +111,8 @@ class HIVSatellite(scrapy.Spider):
     name = 'hiv_satellite'
 
     custom_settings = { 'ITEM_PIPELINES': {'hiv_scraping.pipelines.HivSatScrapingPipeline': 300},
-                        'CLOSESPIDER_PAGECOUNT' : 200}
+                        'CLOSESPIDER_PAGECOUNT' : 200,
+                        'CLOSESPIDER_TIMEOUT' : 30}
 
     saved_domains = []
     dead_ends = {}
@@ -116,7 +124,7 @@ class HIVSatellite(scrapy.Spider):
         self.allowed_domains = [get_domain(self.start_urls[0])]
 
         print
-        print "----------------------- NEW SPIDER -----------------------"
+        print "----------------------- NEW SATELITTE SPIDER -----------------------"
         print "start_urls : %s" % self.start_urls[0]
         print "allowed domains : %s" % self.allowed_domains[0]
         print "----------------------- --- ------ -----------------------"

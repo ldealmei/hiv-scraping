@@ -10,12 +10,23 @@ from hiv_org2 import HIVBootstraper, HIVChecker, HIVSatellite
 from scrapy.utils.project import get_project_settings
 from twisted.internet import reactor, defer
 from scrapy.utils.log import configure_logging
-#
-# def prepare_launch():
-#     doms = pd.read_csv('domains.csv')
-#     doms = doms[np.logical_and(doms['to_crawl'] == 1, doms['crawled'] == 0)]['domain'].tolist()
-#
-#     return doms
+
+import logging
+
+
+NUMBER_OF_SATELLITES = 1
+DEPTH = 2
+URL_SAMPLING_SIZE=1
+
+possible_domains = ['www.nacosa.org.za', 'www.aids.org.za','hivsa.com','www.caprisa.org']
+possible_urls = ['http://www.nacosa.org.za/', 'https://www.aids.org.za' ,'http://hivsa.com/','http://www.caprisa.org/Default']
+
+
+init_domains = [str(item) for item in np.random.choice(possible_domains,URL_SAMPLING_SIZE)]
+idxs = [possible_domains.index(item) for item in init_domains]
+init_urls = [possible_urls[i] for i in idxs]  #
+
+
 
 if __name__ == "__main__" :
 # --------------- PHASE 1 : Crawl initial list --------------------
@@ -25,30 +36,33 @@ if __name__ == "__main__" :
     configure_logging() #when using a crawlerrunner
     runner = CrawlerRunner(get_project_settings())
 
+    logging.basicConfig(filename='myapp.log', level=logging.DEBUG, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S')
+
+
     @defer.inlineCallbacks
     def crawl():
         yield runner.crawl(HIVBootstraper,
-                           allowed_domains = ['www.nacosa.org.za'],
-                           start_urls = ['http://www.nacosa.org.za/'])
+                           allowed_domains = init_domains,
+                           start_urls = init_urls)
 
-        # ['www.nacosa.org.za' 'www.aids.org.za','hivsa.com','www.caprisa.org']
-        # start_urls = ['http://www.nacosa.org.za/', 'https://www.aids.org.za' ,'http://hivsa.com/','http://www.caprisa.org/Default']
+        for l in range(DEPTH):
+            yield runner.crawl(HIVChecker)
+            for i in range(NUMBER_OF_SATELLITES):
+                yield runner.crawl(HIVSatellite)
 
-        yield runner.crawl(HIVChecker)
-        #TODO : Make this value adaptable (or not, maybe we could limit the exploration to the top x sites)
-        for i in range(5):
-            yield runner.crawl(HIVSatellite)
         reactor.stop()
 
     crawl()
     reactor.run()
 
-""" FIRST"""
-# TODO : Why is pepfar.org, a site that should be accepted to be scraped not in the domains.csv ?
-# TODO : test a second loop starting at transform_list()
+""" SHORT-TERM / PRECISE"""
+# TODO : Make sure everything behaves as expected
+# TODO : Write debug and monitoring functions
+# TODO :  Catch AttributeErrors when parsing
+# TODO : Do not leave the spiderclase after 30 seconds
+"""LONG_TERM / VAGUE"""
 
-"""AFTER"""
+# TODO : Use Scrapy logging
 # TODO : Test and integrate neo4j uploading (do it after the HIVChecker spider and change the orgs.csv filename with an uploading time timestamp
 # TODO : desactivate TELNET console
-# TODO : set-up broad crawling options
 # TODO : improve detection of relevance
