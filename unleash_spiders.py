@@ -14,9 +14,9 @@ from scrapy.utils.log import configure_logging
 import logging
 
 
-NUMBER_OF_SATELLITES = 1
-DEPTH = 2
-URL_SAMPLING_SIZE=1
+NUMBER_OF_SATELLITES = 25
+DEPTH = 20
+URL_SAMPLING_SIZE=4
 
 possible_domains = ['www.nacosa.org.za', 'www.aids.org.za','hivsa.com','www.caprisa.org']
 possible_urls = ['http://www.nacosa.org.za/', 'https://www.aids.org.za' ,'http://hivsa.com/','http://www.caprisa.org/Default']

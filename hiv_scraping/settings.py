@@ -10,10 +10,12 @@
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
 LOG_LEVEL = 'WARNING'
-DOWNLOAD_TIMEOUT = 15
+DOWNLOAD_TIMEOUT = 30
 REDIRECT_ENABLED = False
 RETRY_ENABLED = False
 COOKIES_ENABLED = False
+CONCURRENT_REQUESTS = 250
+REACTOR_THREADPOOL_MAXSIZE = 25
 
 BOT_NAME = 'hiv_scraping'
 
