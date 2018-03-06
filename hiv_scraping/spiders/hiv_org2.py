@@ -120,8 +120,8 @@ class HIVSatellite(scrapy.Spider):
 
     def __init__(self, **kw):
         super(HIVSatellite, self).__init__(**kw)
-        self.start_urls = self._get_start_url()
-        self.allowed_domains = [get_domain(self.start_urls[0])]
+        self.start_urls, self.allowed_domains = self._get_starting_state()
+
 
         print
         print "----------------------- NEW SATELITTE SPIDER -----------------------"
@@ -158,7 +158,7 @@ class HIVSatellite(scrapy.Spider):
     def _update_restrictions(self):
         self.restricted_sections = [k for k in self.dead_ends.keys() if self.dead_ends[k] > 3]
 
-    def _get_start_url(self):
+    def _get_starting_state(self):
 
         doms = pd.read_csv('domains.csv')
         eligible_doms = doms[np.logical_and(doms['to_crawl'] == 1, doms['crawled'] == 0)]['domain'].tolist()
@@ -170,7 +170,8 @@ class HIVSatellite(scrapy.Spider):
         	doms.loc[doms['domain'] == chosen_dom, 'crawled'] = 1
         	doms.to_csv('domains.csv', index=False)
 
-        	return [chosen_dom]
+        	return [chosen_dom], [get_domain(chosen_dom)]
 	else :
-		return []
+		return [],[]
+
 
