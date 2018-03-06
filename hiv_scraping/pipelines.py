@@ -43,7 +43,6 @@ class CheckHIVPipeline(object):
             self.exporter = CsvItemExporter(self.file, include_headers_line=False)
 
         self.exporter.start_exporting()
-        self.transform_list()
 
 
     def process_item(self, item, spider):
@@ -69,73 +68,6 @@ class CheckHIVPipeline(object):
         empty_df = pd.DataFrame(columns=['referer','domain','link'])
         empty_df.to_csv('tmp.csv', index=False)
 
-    def transform_list(self):
-        # TODO : make sure loading the whole file doesnt become a bottleneck
-        # TODO : Clean this function (the huge try-except) is bad bad bad
-
-        # Load files
-        try :
-            orgs_df = pd.read_csv('tmp.csv')
-        except pd.errors.EmptyDataError :
-            print "Returning with no new links"
-            return
-
-        try : # if file already exists
-            domains_df = pd.read_csv('domains.csv')
-
-            # Update
-            update_doms = pd.merge(orgs_df[['domain']], domains_df, how='inner', on='domain')
-            update_doms = update_doms.drop_duplicates()
-
-            print "%s domains to be updated" % len(update_doms)
-
-            if len(update_doms) > 0:
-                update_doms['references'] = update_doms.apply(self._update_domain_count, args=(orgs_df,), axis=1)
-
-            # Add
-            new_doms = pd.merge(orgs_df[['domain']], domains_df, how='left', on='domain')
-            new_doms = new_doms[new_doms['references'].isnull()].drop_duplicates()
-
-            print "%s domains to be added" % len(new_doms)
-
-            if len(new_doms) > 0:
-                new_doms[['crawled', 'references']] = new_doms[['crawled', 'references']].fillna(
-                    0)  # we keep 'to_crawl' as NaN to allow the CheckerSpider to decide over that
-                new_doms['references'] = new_doms.apply(self._update_domain_count, args=(orgs_df,), axis=1)
-            # Leave as is
-
-            unchanged_doms = pd.merge(orgs_df[['domain', 'referer']], domains_df, how='right', on='domain')
-            unchanged_doms = unchanged_doms[unchanged_doms['referer'].isnull()].drop('referer', axis=1)
-
-            print "%s domains left alone" % len(unchanged_doms)
-
-            # Combine everything together and save to disk
-            domains_df = pd.concat([unchanged_doms, update_doms, new_doms]).sort_values(by='references',
-                                                                                        ascending=False)
-            domains_df.to_csv('domains.csv', index=False)
-
-        except : # if file does not yet exist
-            domains_df = pd.DataFrame(columns=['domain', 'to_crawl', 'crawled', 'references'])
-
-            # Create
-            new_doms = pd.merge(orgs_df[['domain']], domains_df, how='left', on='domain')
-            new_doms = new_doms[new_doms['references'].isnull()].drop_duplicates()
-
-            print "%s domains to be added" % len(new_doms)
-
-            if len(new_doms) > 0:
-                new_doms[['crawled', 'references']] = new_doms[['crawled', 'references']].fillna(
-                    0)  # we keep 'to_crawl' as NaN to allow the CheckerSpider to decide over that
-                new_doms['references'] = new_doms.apply(self._get_domain_count, args=(orgs_df,), axis=1)
-
-            # Save to disk
-            new_doms = new_doms.sort_values(by='references', ascending=False)
-            new_doms.to_csv('domains.csv', index=False)
-
-
-    def _get_domain_count(self, df_row, orgs_df):
-        new_refs = sum(orgs_df['domain'] == df_row['domain'])
-        return df_row['references'] + new_refs
 
     def make_domain_selection(self):
         dom_check = pd.read_csv('homepage_check.csv')

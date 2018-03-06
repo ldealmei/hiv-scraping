@@ -123,13 +123,13 @@ class HIVSatellite(scrapy.Spider):
         self.start_urls, self.allowed_domains = self._get_starting_state()
 
 
-        print
-        print "----------------------- NEW SATELITTE SPIDER -----------------------"
-        print "start_urls : %s" % self.start_urls[0]
-        print "allowed domains : %s" % self.allowed_domains[0]
-        print "----------------------- --- ------ -----------------------"
-        print
-
+        if len(self.start_urls)==1 :
+            print
+            print "----------------------- NEW SATELITTE SPIDER -----------------------"
+            print "start_urls : %s" % self.start_urls[0]
+            print "allowed domains : %s" % self.allowed_domains[0]
+            print "----------------------- --- ------ -----------------------"
+            print
 
     def parse(self, response):
         # TODO : Find a way to have the exact same logic as the HIVBootstrap spider (maybe just have the exact same type?)
