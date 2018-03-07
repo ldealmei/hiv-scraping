@@ -99,8 +99,6 @@ class CheckHIVPipeline(object):
 
         orgs_clean.to_csv('orgs.csv', index = False)
 
-        print "Keeping {} orgs from pool of {}".format(len(orgs_clean),len(raw_orgs))
-
 
     def _keep_or_not(self,s, domains):
         return s in domains['domain'].tolist() and bool(domains.loc[domains['domain']==s, 'to_crawl'].values[0])

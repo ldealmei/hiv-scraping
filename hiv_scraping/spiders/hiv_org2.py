@@ -111,8 +111,7 @@ class HIVSatellite(scrapy.Spider):
     name = 'hiv_satellite'
 
     custom_settings = { 'ITEM_PIPELINES': {'hiv_scraping.pipelines.HivSatScrapingPipeline': 300},
-                        'CLOSESPIDER_PAGECOUNT' : 200,
-                        'CLOSESPIDER_TIMEOUT' : 30}
+                        'CLOSESPIDER_PAGECOUNT' : 500}
 
     saved_domains = []
     dead_ends = {}

@@ -10,7 +10,7 @@ from hiv_org2 import HIVBootstraper, HIVChecker, HIVSatellite
 from scrapy.utils.project import get_project_settings
 from twisted.internet import reactor, defer
 from scrapy.utils.log import configure_logging
-
+from neo4juploader import Neo4jUploader
 import logging
 
 
@@ -137,18 +137,16 @@ if __name__ == "__main__" :
     crawl()
     reactor.run()
 
-""" SHORT-TERM / PRECISE"""
+    # uploader = Neo4jUploader()
+    # uploader.set_graph('orgs.csv')
+    # uploader.push_graph()
 
-# TODO : domains.csv ne s'update pas correctement?
+""" SHORT-TERM / PRECISE"""
+# TODO : improve detection of relevance (we end up on food websites...)
 # TODO : Instead of multiple satelitte spiders only open one?
 # TODO : Register all errors (TimeoutError, AttributeError,...) and save the domain and type to a file?
-# TODO : Make sure everything behaves as expected
 # TODO : Write debug and monitoring functions
-# TODO :  Catch AttributeErrors when parsing
-# TODO : Do not leave the spiderclass after 30 seconds
 
 """LONG_TERM / VAGUE"""
 
 # TODO : Test and integrate neo4j uploading (do it after the HIVChecker spider and change the orgs.csv filename with an uploading time timestamp
-# TODO : desactivate TELNET console
-# TODO : improve detection of relevance
