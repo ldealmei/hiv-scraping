@@ -30,18 +30,8 @@ class HivBootstrapScrapingPipeline(object):
 class CheckHIVPipeline(object):
     def open_spider(self, spider):
 
-        if os.path.exists('homepage_check.csv'):
-            first_check = False
-        else :
-            first_check = True
-
-        self.file = open("homepage_check.csv", 'ab')
-
-        if first_check :
-            self.exporter = CsvItemExporter(self.file, unicode)
-        else :
-            self.exporter = CsvItemExporter(self.file, include_headers_line=False)
-
+        self.file = open("homepage_check.csv", 'wb')
+        self.exporter = CsvItemExporter(self.file, unicode)
         self.exporter.start_exporting()
 
 
@@ -65,22 +55,30 @@ class CheckHIVPipeline(object):
         self.empty_tmp()
 
     def empty_tmp(self):
+        # This is necessary because now, multiple spiders upload to the tmp.csv file (when I replace it with 1 spider only, this function will become useless)
         empty_df = pd.DataFrame(columns=['referer','domain','link'])
         empty_df.to_csv('tmp.csv', index=False)
 
 
     def make_domain_selection(self):
-        dom_check = pd.read_csv('homepage_check.csv')
+        try :
+            dom_check = pd.read_csv('homepage_check.csv')
+        except :
+            return
+
         doms = pd.read_csv('domains.csv')
         doms_to_set = doms[doms['to_crawl'].isnull()]  # select only those that were not fixed yet
+        doms_past = doms[doms['to_crawl'].notnull()] # keep those already set
 
-        dom_join = pd.merge(doms_to_set, dom_check, on='domain')
+        doms_join = pd.merge(doms_to_set, dom_check, on='domain')
 
-        dom_join['to_crawl'] = dom_join.apply(self._check_hiv_relevance, axis=1)
+        doms_join['to_crawl'] = doms_join.apply(self._check_hiv_relevance, axis=1)
 
-        dom_join = dom_join.sort_values(by=['to_crawl', 'references'], ascending=False) \
-                            .drop(['hiv', 'ngo', 'health', 'aids', 'gov', 'data'], axis=1)
-        dom_join.to_csv('domains.csv',index=False)
+        doms_join = doms_join.drop(['hiv', 'ngo', 'health', 'aids', 'gov', 'data'], axis=1)
+
+        doms = pd.concat([doms_past, doms_join])
+        doms.sort_values(by=['to_crawl', 'references'], ascending=False)\
+                .to_csv('domains.csv', index=False)
 
     def clean_orgs(self):
         # TODO : We load the whole orgs.csv file, might become big and unmanageable

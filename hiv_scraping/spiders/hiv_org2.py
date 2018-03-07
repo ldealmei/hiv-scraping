@@ -24,7 +24,7 @@ class OrgWebsite(scrapy.Item):
 
 
 class HIVBootstraper(scrapy.Spider):
-    #TODO : Change customsetting when not debugging
+    #TODO : Change custom setting when not debugging
     name = 'hiv_bootstraper'
     custom_settings = {
         'ITEM_PIPELINES': {'hiv_scraping.pipelines.HivBootstrapScrapingPipeline': 300},

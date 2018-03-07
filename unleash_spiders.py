@@ -14,8 +14,8 @@ from scrapy.utils.log import configure_logging
 import logging
 
 
-NUMBER_OF_SATELLITES = 25
-DEPTH = 20
+NUMBER_OF_SATELLITES = 3
+DEPTH = 2
 URL_SAMPLING_SIZE=4
 
 possible_domains = ['www.nacosa.org.za', 'www.aids.org.za','hivsa.com','www.caprisa.org']
@@ -34,7 +34,9 @@ def transform_list():
     # Load files
     try:
         orgs_df = pd.read_csv('tmp.csv')
+
     except pd.errors.EmptyDataError:
+
         print "Returning with no new links"
         return
 
@@ -68,9 +70,9 @@ def transform_list():
         print "%s domains left alone" % len(unchanged_doms)
 
         # Combine everything together and save to disk
-        domains_df = pd.concat([unchanged_doms, update_doms, new_doms]).sort_values(by='references',
-                                                                                    ascending=False)
-        domains_df.to_csv('domains.csv', index=False)
+        domains_df = pd.concat([unchanged_doms, update_doms, new_doms])
+        domains_df.sort_values(by='references',ascending=False)\
+                    .to_csv('domains.csv', index=False)
 
     except:  # if file does not yet exist
         domains_df = pd.DataFrame(columns=['domain', 'to_crawl', 'crawled', 'references'])
@@ -87,8 +89,8 @@ def transform_list():
             new_doms['references'] = new_doms.apply(_get_domain_count, args=(orgs_df,), axis=1)
 
         # Save to disk
-        new_doms = new_doms.sort_values(by='references', ascending=False)
-        new_doms.to_csv('domains.csv', index=False)
+        new_doms.sort_values(by='references', ascending=False)\
+                .to_csv('domains.csv', index=False)
 
 
 def _get_domain_count( df_row, orgs_df):
@@ -112,11 +114,23 @@ if __name__ == "__main__" :
                            allowed_domains = init_domains,
                            start_urls = init_urls)
 
+        # raw_input('Check files - After Bootscrap')
+        transform_list()
+        # raw_input('Check files - After transform_list')
+
+        yield runner.crawl(HIVChecker)
+        # raw_input('Check files - After HIV Checker')
+
         for l in range(DEPTH):
-            transform_list()
-            yield runner.crawl(HIVChecker)
             for i in range(NUMBER_OF_SATELLITES):
                 yield runner.crawl(HIVSatellite)
+                # raw_input('Check files - After one Satellite Spider')
+
+            transform_list()
+            # raw_input('Check files - After transform_list')
+
+            yield runner.crawl(HIVChecker)
+            # raw_input('Check files - After HIV Checker')
 
         reactor.stop()
 
@@ -124,6 +138,10 @@ if __name__ == "__main__" :
     reactor.run()
 
 """ SHORT-TERM / PRECISE"""
+
+# TODO : domains.csv ne s'update pas correctement?
+# TODO : Instead of multiple satelitte spiders only open one?
+# TODO : Register all errors (TimeoutError, AttributeError,...) and save the domain and type to a file?
 # TODO : Make sure everything behaves as expected
 # TODO : Write debug and monitoring functions
 # TODO :  Catch AttributeErrors when parsing
