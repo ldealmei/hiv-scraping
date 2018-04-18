@@ -5,7 +5,7 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
-from scrapy.exporters import CsvItemExporter
+from scrapy.exporters import CsvItemExporter, JsonLinesItemExporter
 import re
 import pandas as pd
 import os
@@ -124,6 +124,20 @@ class HivSatScrapingPipeline(object):
 
     def close_spider(self, spider):
         # populate with logic to log the result of the scraping of that domain
+        self.exporter.finish_exporting()
+        self.file.close()
+
+class DataSetPipeline(object):
+    def open_spider(self, spider):
+        self.file = open("classifier_neg_data.jsonl", 'ab')
+        self.exporter = JsonLinesItemExporter(self.file)
+        self.exporter.start_exporting()
+
+    def process_item(self, item, spider):
+        self.exporter.export_item(item)
+        return item
+
+    def close_spider(self, spider):
         self.exporter.finish_exporting()
         self.file.close()
 

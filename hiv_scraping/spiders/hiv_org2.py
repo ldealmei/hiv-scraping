@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from scrapy.linkextractors import LinkExtractor
+from scrapy.selector import Selector
 import re
 import pandas as pd
 import numpy as np
 import logging
+
+from w3lib.html import remove_tags, remove_tags_with_content
 
 def get_domain(url):
     matched = re.match('^(?:http[s]?://)+[^/]*', url).group(0)
@@ -121,7 +124,6 @@ class HIVSatellite(scrapy.Spider):
         super(HIVSatellite, self).__init__(**kw)
         self.start_urls, self.allowed_domains = self._get_starting_state()
 
-
         if len(self.start_urls)==1 :
             print
             print "----------------------- NEW SATELITTE SPIDER -----------------------"
@@ -174,3 +176,37 @@ class HIVSatellite(scrapy.Spider):
             return [],[]
 
 
+class DataSetBuilder(scrapy.Spider):
+    #TODO : Change custom setting when not debugging
+    name = 'dataset_builder'
+
+    start_urls= []
+
+    custom_settings = { 'ITEM_PIPELINES': {'hiv_scraping.pipelines.DataSetPipeline': 300} }
+
+    def start_requests(self):
+        return [scrapy.Request(dom, callback=self.parse) for dom in self._load_domains()]
+
+    def parse(self, response):
+        sel = Selector(response = response)
+        raw_dump = sel.xpath('//body/descendant-or-self::*[not(self::script)]/text()').extract()
+
+        word_dump = ' '.join([txt for txt in raw_dump if self._has_content(txt)])
+
+        # word_dump = ''.join([txt.lower() for txt in response.xpath('//body//text()').extract()])
+
+        yield {'domain' : trim_url(response.request.url),
+               'text_dump' : word_dump}
+
+    def _load_domains(self):
+        doms = pd.read_csv('nohiv_set0.csv',header=None)
+        doms = doms[0].tolist()
+
+        return doms
+
+    def _has_content(self, txt):
+        for t in txt :
+            if t not in ['\n', '\t', ' ', '\r'] :
+                return True
+
+        return False
