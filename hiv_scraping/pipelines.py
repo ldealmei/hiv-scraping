@@ -129,7 +129,7 @@ class HivSatScrapingPipeline(object):
 
 class DataSetPipeline(object):
     def open_spider(self, spider):
-        self.file = open("classifier_neg_data.jsonl", 'ab')
+        self.file = open("classifier_pos_data.jsonl", 'ab')
         self.exporter = JsonLinesItemExporter(self.file)
         self.exporter.start_exporting()
 

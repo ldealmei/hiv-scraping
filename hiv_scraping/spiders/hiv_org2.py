@@ -199,7 +199,7 @@ class DataSetBuilder(scrapy.Spider):
                'text_dump' : word_dump}
 
     def _load_domains(self):
-        doms = pd.read_csv('nohiv_set0.csv',header=None)
+        doms = pd.read_csv('hiv_set0.csv',header=None)
         doms = doms[0].tolist()
 
         return doms

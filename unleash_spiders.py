@@ -142,11 +142,12 @@ if __name__ == "__main__" :
     # uploader.push_graph()
 
 """ SHORT-TERM / PRECISE"""
-# TODO : improve detection of relevance (we end up on food websites...)
 # TODO : Instead of multiple satelitte spiders only open one?
 # TODO : Register all errors (TimeoutError, AttributeError,...) and save the domain and type to a file?
-# TODO : Write debug and monitoring functions
+# TODO : Log execution
+# TODO : create new script that enriches the dataset (country, gov, ngo, etc...)
 
 """LONG_TERM / VAGUE"""
 
 # TODO : Test and integrate neo4j uploading (do it after the HIVChecker spider and change the orgs.csv filename with an uploading time timestamp
+# TODO : include the use of SiteMaps to improve website craling (https://www.sitemaps.org/index.html)
