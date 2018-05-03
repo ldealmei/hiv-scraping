@@ -25,7 +25,6 @@ class OrgWebsite(scrapy.Item):
     referer = scrapy.Field()
 
 
-
 class HIVBootstraper(scrapy.Spider):
     #TODO : Change custom setting when not debugging
     name = 'hiv_bootstraper'
@@ -44,13 +43,6 @@ class HIVBootstraper(scrapy.Spider):
         # self.allowed_domains = [get_domain(self.start_urls[0])]
 
         logging.info('Starting Bootstrap Spider with : %s', ', '.join(self.start_urls))
-
-        print
-        print "----------------------- UNLEASHING BOOTSTRAP SPIDER -----------------------"
-        print "start_urls : %s" % self.start_urls[0]
-        print "allowed domains : %s" % self.allowed_domains[0]
-        print "----------------------- --- ------ -----------------------"
-        print
 
     def parse(self, response):
         links = LinkExtractor(allow=(), deny=self.allowed_domains + self.saved_domains).extract_links(response)
@@ -103,9 +95,7 @@ class HIVChecker(scrapy.Spider) :
         doms = pd.read_csv('domains.csv')
         doms = doms[doms['to_crawl'].isnull()].sort_values(by='references')['domain'].tolist()
 
-        print "-----------------------"
-        print "%s NEW DOMAINS TO CHECK FOR HIV" % str(len(doms))
-        print "-----------------------"
+        logging.info("%s new domains to be check for HIV" % str(len(doms)))
 
         return doms
 
@@ -125,12 +115,8 @@ class HIVSatellite(scrapy.Spider):
         self.start_urls, self.allowed_domains = self._get_starting_state()
 
         if len(self.start_urls)==1 :
-            print
-            print "----------------------- NEW SATELITTE SPIDER -----------------------"
-            print "start_urls : %s" % self.start_urls[0]
-            print "allowed domains : %s" % self.allowed_domains[0]
-            print "----------------------- --- ------ -----------------------"
-            print
+
+            logging.info('New satellite spider : %s', self.start_urls[0])
 
     def parse(self, response):
         # TODO : Find a way to have the exact same logic as the HIVBootstrap spider (maybe just have the exact same type?)
