@@ -67,29 +67,33 @@ class HIVBootstraper(scrapy.Spider):
             for link in next_links:
                 yield scrapy.Request(link.url, callback=self.parse)
 
-
-
     def _update_restrictions(self):
         self.restricted_sections = [k for k in self.dead_ends.keys() if self.dead_ends[k] > 3]
-
 
 class HIVChecker(scrapy.Spider) :
 
     name = 'hiv_checker'
     start_urls= []
     custom_settings = {
-        'ITEM_PIPELINES': {'hiv_scraping.pipelines.CheckHIVPipeline': 300}
+        'ITEM_PIPELINES': {'hiv_scraping.pipelines.ClfHIVPipeline': 300} #CheckHIVPipeline
         }
 
     def start_requests(self):
         return [scrapy.Request(dom, callback=self.hiv_check) for dom in self._load_domains_to_check()]
 
     def hiv_check(self, response): #parse method
-        word_dump = ''.join([txt.lower() for txt in response.xpath('//text()').extract()])
+        sel = Selector(response = response)
+        raw_dump = sel.xpath('//body/descendant-or-self::*[not(self::script)]/text()').extract()
+
+        word_dump = ' '.join([txt for txt in raw_dump if self._has_content(txt)])
 
         yield {'domain' : trim_url(response.request.url),
                'text_dump' : word_dump}
 
+    def _has_content(self, txt):
+        for t in txt :
+            if t not in ['\n', '\t', ' ', '\r'] :
+                return True
 
     def _load_domains_to_check(self):
         doms = pd.read_csv('domains.csv')
@@ -178,8 +182,6 @@ class DataSetBuilder(scrapy.Spider):
         raw_dump = sel.xpath('//body/descendant-or-self::*[not(self::script)]/text()').extract()
 
         word_dump = ' '.join([txt for txt in raw_dump if self._has_content(txt)])
-
-        # word_dump = ''.join([txt.lower() for txt in response.xpath('//body//text()').extract()])
 
         yield {'domain' : trim_url(response.request.url),
                'text_dump' : word_dump}

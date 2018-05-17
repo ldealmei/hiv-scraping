@@ -13,6 +13,10 @@ from scrapy.utils.log import configure_logging
 from neo4juploader import Neo4jUploader
 import logging
 from logging.config import fileConfig
+from clf import *
+# in clf, the custom classes of the sklearn pipeline are defined. Needed to import this so that the trained object can be loaded
+
+
 
 fileConfig('logging_config.ini')
 logger = logging.getLogger()
@@ -155,14 +159,10 @@ if __name__ == "__main__" :
     # uploader.push_graph()
 
 """ EN COURS"""
-# TODO : Logging execution (make it work!)
+
 
 """ SHORT-TERM / PRECISE"""
-# TODO : Instead of multiple satelitte spiders only open one?
-# TODO : Register all errors (TimeoutError, AttributeError,...) and save the domain and type to a file?
-# TODO : create new script that enriches the dataset (country, gov, ngo, etc...)
+# TODO : Instead of multiple satelite spiders only open one?
+# TODO : include the use of SiteMaps to improve website craling (https://www.sitemaps.org/index.html)
 
 """LONG_TERM / VAGUE"""
-
-# TODO : Test and integrate neo4j uploading (do it after the HIVChecker spider and change the orgs.csv filename with an uploading time timestamp
-# TODO : include the use of SiteMaps to improve website craling (https://www.sitemaps.org/index.html)
