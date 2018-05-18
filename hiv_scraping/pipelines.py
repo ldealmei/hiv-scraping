@@ -145,14 +145,15 @@ class ClfHIVPipeline(object):
 
         logging.debug(doms_join)
 
-        doms_join['to_crawl'] = doms_join.apply(self._predict_hiv, axis=1)
+        #TODO : Make the prediction in one go (as an array) not line by line
+        doms_join['to_crawl'] = self._predict_hiv(doms_join['text_dump'])
         doms_join = doms_join.drop(['text_dump'], axis=1)
 
         doms = pd.concat([doms_past, doms_join])
         doms.sort_values(by=['to_crawl', 'references'], ascending=False)\
                 .to_csv('domains.csv', index=False)
 
-    def _predict_hiv(self,txt):
+    def _predict_hiv(self,txt_dumps):
         logging.info('Predicting...')
         try :
             pipeline = joblib.load('hiv_sites_py2.pipeline')
@@ -160,14 +161,17 @@ class ClfHIVPipeline(object):
             logging.critical("Could not load classification pipeline!")
             logging.info(err)
 
-
         logging.debug(pipeline)
-        logging.debug(txt['text_dump'])
+        logging.debug(txt_dumps)
 
-        res = pipeline.predict([txt['text_dump']])
-        logging.info("This domain is HIV? {}".format(res[0]))
+        try :
+            res = pipeline.predict(txt_dumps)
+            logging.info(res)
+        except Exception as err :
+            logging.critical("Could not make prediction")
+            logging.info(err)
 
-        return res[0]
+        return res
 
     def clean_orgs(self):
         # TODO : We load the whole orgs.csv file, might become big and unmanageable
