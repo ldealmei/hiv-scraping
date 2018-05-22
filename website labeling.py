@@ -8,7 +8,7 @@
 # 
 # Load a new URL into a previously created WebView window. This function must be invoked after WebView windows is created with create_window(). Otherwise an exception is thrown.
 
-# In[2]:
+# In[ ]:
 
 
 import threading
@@ -17,21 +17,34 @@ import webview
 import pandas as pd
 
 class webThread(threading.Thread):
-    def __init__(self, threadID, name, dom_df):
+    def __init__(self, threadID, name, limit = 50):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.name = name
-        self.url_gen = (url for url in dom_df['domain'])
         
+        try :
+            # fetch most recent version
+            d = pd.read_csv('dom_lbl.csv')
+            self.url_list = d[d['hiv'].isnull()]['domain'][:limit].tolist()
+            self.past_df = d[d['hiv'].notnull()]
+
+        except :
+            # start from 0
+            d = pd.read_csv('domains.csv')
+            self.url_list = d['domain'][:limit].tolist()
+            self.past_df = None
+
+
+
         self.lbls = ['hiv','health','gov','edu','ngo']
         # init dataframe
-        self.data_lbl = dom_df
+        self.data_lbl = d
         for lbl in self.lbls :
             self.data_lbl[lbl] = None
         
     def run(self):
         idx=0
-        for url in self.url_gen :
+        for url in self.url_list :
             
             print "Starting " + self.name + " on " + url
 
@@ -48,15 +61,32 @@ class webThread(threading.Thread):
                     else :
                         break
             idx+=1
-            self.data_lbl.to_csv('dom_lbl.csv')
-
-d = pd.read_csv('domains.csv')
+            if self.past_df is None:
+                self.data_lbl.to_csv('dom_lbl.csv', index=False)
+            else :
+                pd.concat([self.past_df,self.data_lbl])                   .to_csv('dom_lbl.csv', index=False)
+            
 
 # Create new threads
-web_thread = webThread(1, "Web Thread", d)
+web_thread = webThread(1, "Web Thread", 2)
 
 # Start new Threads
 web_thread.start()
 
 webview.create_window('Please label this site', width=1200, height=800, resizable=True, fullscreen=False)
+
+
+# In[ ]:
+
+
+import pandas as pd
+# fetch most recent version
+d = pd.read_csv('dom_lbl.csv')
+
+
+
+# In[ ]:
+
+
+d[d['hiv'].notnull()]
 
