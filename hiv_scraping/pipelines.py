@@ -216,8 +216,22 @@ class HivSatScrapingPipeline(object):
 
 class DataSetPipeline(object):
     def open_spider(self, spider):
-        self.file = open("classifier_pos_data.jsonl", 'ab')
-        self.exporter = JsonLinesItemExporter(self.file)
+        self.file = open("classifier_data.csv", 'wb')
+        self.exporter = CsvItemExporter(self.file)
+        self.exporter.start_exporting()
+
+    def process_item(self, item, spider):
+        self.exporter.export_item(item)
+        return item
+
+    def close_spider(self, spider):
+        self.exporter.finish_exporting()
+        self.file.close()
+
+class EnrichPipeline(object):
+    def open_spider(self, spider):
+        self.file = open("classifier_data_about.csv", 'wb')
+        self.exporter = CsvItemExporter(self.file)
         self.exporter.start_exporting()
 
     def process_item(self, item, spider):

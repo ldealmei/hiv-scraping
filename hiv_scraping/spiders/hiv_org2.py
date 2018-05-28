@@ -167,12 +167,10 @@ class HIVSatellite(scrapy.Spider):
 
 
 class DataSetBuilder(scrapy.Spider):
-    #TODO : Change custom setting when not debugging
     name = 'dataset_builder'
-
     start_urls= []
-
     custom_settings = { 'ITEM_PIPELINES': {'hiv_scraping.pipelines.DataSetPipeline': 300} }
+    dom_lbl = pd.read_csv('dom_lbl.csv')
 
     def start_requests(self):
         return [scrapy.Request(dom, callback=self.parse) for dom in self._load_domains()]
@@ -180,21 +178,63 @@ class DataSetBuilder(scrapy.Spider):
     def parse(self, response):
         sel = Selector(response = response)
         raw_dump = sel.xpath('//body/descendant-or-self::*[not(self::script)]/text()').extract()
-
         word_dump = ' '.join([txt for txt in raw_dump if self._has_content(txt)])
 
         yield {'domain' : trim_url(response.request.url),
-               'text_dump' : word_dump}
+               'text_dump' : word_dump,
+               'hiv' : self.dom_lbl[self.dom_lbl['domain']==trim_url(response.request.url)]['hiv'].values[0],
+               'research': self.dom_lbl[self.dom_lbl['domain'] == trim_url(response.request.url)]['research'].values[0],
+               'gov': self.dom_lbl[self.dom_lbl['domain'] == trim_url(response.request.url)]['gov'].values[0],
+               'uni': self.dom_lbl[self.dom_lbl['domain'] == trim_url(response.request.url)]['uni'].values[0],
+               'ngo': self.dom_lbl[self.dom_lbl['domain'] == trim_url(response.request.url)]['ngo'].values[0],
+               'association': self.dom_lbl[self.dom_lbl['domain'] == trim_url(response.request.url)]['association'].values[0]}
 
     def _load_domains(self):
-        doms = pd.read_csv('hiv_set0.csv',header=None)
-        doms = doms[0].tolist()
-
-        return doms
+        doms = pd.read_csv('dom_lbl.csv')
+        dom_list = doms[doms['hiv'].notnull()]['domain'].tolist()
+        return dom_list
 
     def _has_content(self, txt):
         for t in txt :
             if t not in ['\n', '\t', ' ', '\r'] :
+                return True
+
+        return False
+
+class DataSetEnricher(scrapy.Spider):
+    # TODO : Change custom setting when not debugging
+    name = 'dataset_enricher'
+
+    start_urls = []
+
+    custom_settings = {'ITEM_PIPELINES': {'hiv_scraping.pipelines.EnrichPipeline': 300}}
+
+    dom_lbl = pd.read_csv('dom_lbl.csv')
+
+    def start_requests(self):
+        return [scrapy.Request(dom, callback=self.parse) for dom in self._load_domains()]
+
+    def parse(self, response):
+        sel = Selector(response=response)
+        raw_dump = sel.xpath('//body/descendant-or-self::*[not(self::script)]/text()').extract()
+
+        word_dump = ' '.join([txt for txt in raw_dump if self._has_content(txt)])
+
+        yield {'domain': trim_url(response.request.url),
+               'about_dump': word_dump}
+
+    def _load_domains(self):
+
+        doms = pd.read_csv('dom_lbl.csv')
+
+        dom_list = doms[doms['hiv'].notnull()]['domain'].tolist()
+        about_list = [d + "/about" for d in dom_list] + [d + "/about-us" for d in dom_list]
+
+        return about_list
+
+    def _has_content(self, txt):
+        for t in txt:
+            if t not in ['\n', '\t', ' ', '\r']:
                 return True
 
         return False
