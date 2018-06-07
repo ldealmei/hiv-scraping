@@ -170,7 +170,7 @@ class DataSetBuilder(scrapy.Spider):
     name = 'dataset_builder'
     start_urls= []
     custom_settings = { 'ITEM_PIPELINES': {'hiv_scraping.pipelines.DataSetPipeline': 300} }
-    dom_lbl = pd.read_csv('dom_lbl.csv')
+    dom_lbl = pd.read_csv('dataset/dom_lbl.csv')
 
     def start_requests(self):
         return [scrapy.Request(dom, callback=self.parse) for dom in self._load_domains()]
@@ -190,7 +190,7 @@ class DataSetBuilder(scrapy.Spider):
                'association': self.dom_lbl[self.dom_lbl['domain'] == trim_url(response.request.url)]['association'].values[0]}
 
     def _load_domains(self):
-        doms = pd.read_csv('dom_lbl.csv')
+        doms = pd.read_csv('dataset/dom_lbl.csv')
         dom_list = doms[doms['hiv'].notnull()]['domain'].tolist()
         return dom_list
 
@@ -209,7 +209,7 @@ class DataSetEnricher(scrapy.Spider):
 
     custom_settings = {'ITEM_PIPELINES': {'hiv_scraping.pipelines.EnrichPipeline': 300}}
 
-    dom_lbl = pd.read_csv('dom_lbl.csv')
+    dom_lbl = pd.read_csv('dataset/dom_lbl.csv')
 
     def start_requests(self):
         return [scrapy.Request(dom, callback=self.parse) for dom in self._load_domains()]
@@ -225,7 +225,7 @@ class DataSetEnricher(scrapy.Spider):
 
     def _load_domains(self):
 
-        doms = pd.read_csv('dom_lbl.csv')
+        doms = pd.read_csv('dataset/dom_lbl.csv')
 
         dom_list = doms[doms['hiv'].notnull()]['domain'].tolist()
         about_list = [d + "/about" for d in dom_list] + [d + "/about-us" for d in dom_list]

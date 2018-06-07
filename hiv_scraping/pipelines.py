@@ -216,7 +216,7 @@ class HivSatScrapingPipeline(object):
 
 class DataSetPipeline(object):
     def open_spider(self, spider):
-        self.file = open("classifier_data.csv", 'wb')
+        self.file = open("dataset/classifier_data.csv", 'wb')
         self.exporter = CsvItemExporter(self.file)
         self.exporter.start_exporting()
 
@@ -230,7 +230,7 @@ class DataSetPipeline(object):
 
 class EnrichPipeline(object):
     def open_spider(self, spider):
-        self.file = open("classifier_data_about.csv", 'wb')
+        self.file = open("dataset/classifier_data_about.csv", 'wb')
         self.exporter = CsvItemExporter(self.file)
         self.exporter.start_exporting()
 
