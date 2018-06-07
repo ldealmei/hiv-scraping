@@ -156,7 +156,7 @@ class ClfHIVPipeline(object):
     def _predict_hiv(self,txt_dumps):
         logging.info('Predicting...')
         try :
-            pipeline = joblib.load('hiv_sites_py2.pipeline')
+            pipeline = joblib.load('models/hiv_sites_py2.pipeline')
         except Exception as err :
             logging.critical("Could not load classification pipeline!")
             logging.info(err)
